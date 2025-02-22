@@ -12,18 +12,20 @@ etf_list = {
     '0P0000TKZM.L': 'Vanguard_LifeStrategy_80_Equity_Acc',
     '0P0000KSP6.L': 'Vanguard_FTSE_Dev_Wld_ex-UK_Eq_Idx_Acc',
     '0P000185T3.L': 'Vanguard_Global_Equity_Accumulation',
-    'VERE.M': 'Vanguard_FTSE_Developed_Europe_ex UK_UCITS_ETF_Accuimulation',
+    'VERE.MI': 'Vanguard_FTSE_Developed_Europe_ex UK_UCITS_ETF_Accuimulation',
     'VMID.SW': 'Vanguard FTSE 250 UCITS ETF'
 }
 
 def select_asset(asset_code: str):
     asset_data = yf.Ticker(asset_code)
-    # print(asset_data.info)
-    # asset_data.calendar
-    # asset_data.analyst_price_targets
-    # asset_data.quarterly_income_stmt
-    # asset_data.history(period='1mo')
-    # asset_data.option_chain(asset_data.options[0]).calls
+
+    print(asset_data.info)
+
+    print("start date:")
+    try:
+        print(asset_data.info['startDate'])
+    except:
+        print("asset does not have start date")
 
     historical_data = asset_data.history(period="1y")
     print("Historical past year data:")
