@@ -1,5 +1,5 @@
 Django
 numpy==1.19.5
 pyfinance
-yfinance
+yfinance==0.2.54
 djangorestframework
