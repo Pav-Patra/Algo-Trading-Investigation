@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 
 
-np.random.seed(444)
 
 etf_list = {
     '0P0000TKZK.L': 'Vanguard_LifeStrategy_60_Equity_Acc',
@@ -16,20 +15,42 @@ etf_list = {
     'VMID.SW': 'Vanguard FTSE 250 UCITS ETF'
 }
 
+
+
 def select_asset(asset_code: str):
     asset_data = yf.Ticker(asset_code)
 
     print(asset_data.info)
 
-    print("start date:")
-    try:
-        print(asset_data.info['startDate'])
-    except:
-        print("asset does not have start date")
-
     historical_data = asset_data.history(period="1y")
+
     print("Historical past year data:")
     print(historical_data)
+
+    return historical_data
+
+
+def select_asset_x_years(asset_code: str, years: int):
+    asset_data = yf.Ticker(asset_code)
+
+    historical_data = asset_data.history(period=f"{years}y")
+
+    print(f"Historical data for past {years} years:")
+    print(historical_data)
+
+    return historical_data
+
+
+def select_asset_all_history(asset_code: str):
+    asset_data = yf.Ticker(asset_code)
+
+    return asset_data.history(period="max")
+
+
+def get_asset_info(asset_code: str):
+    asset_data = yf.Ticker(asset_code)
+    return asset_data.info
+
 
 def example_yfinance():
     # Define the ticker symbol
@@ -54,9 +75,19 @@ def example_yfinance():
     print(actions)
 
 
+
+
 if __name__ == "__main__":
     for asset in etf_list:
-        print(asset)
+        asset_info = get_asset_info(asset)
 
-        select_asset(asset)
+        asset_long_name = asset_info['longName']
+
+        print(asset_long_name)
+
+        print("All time market data:")
+
+        max_history_data = select_asset_all_history(asset)
+        print(max_history_data.iloc[0])
+
         
