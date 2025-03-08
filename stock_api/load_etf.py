@@ -4,6 +4,8 @@ import argparse
 import numpy as np
 import pandas as pd
 import logging
+import matplotlib.pyplot as plt
+from pandas import DataFrame
 
 
 
@@ -57,6 +59,14 @@ def get_asset_info(asset_code: str):
     return asset_data.info
 
 
+def get_close_price_list_with_date(asset_data: DataFrame):
+    return asset_data['Close']
+
+
+def draw_line_graph(asset_data: DataFrame):
+    ...
+
+
 
 
 
@@ -75,5 +85,9 @@ if __name__ == "__main__":
 
         max_history_data = select_asset_all_history(asset)
         logger.info(max_history_data.iloc[0])
+
+        logger.info(f"Asset close prices: {get_close_price_list_with_date(max_history_data)}")
+        logger.info(f"Total number of prices: {len(max_history_data['Close'])}")
+        logger.info("--------------------------------------")
 
         
