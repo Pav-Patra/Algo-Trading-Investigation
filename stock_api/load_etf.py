@@ -5,10 +5,12 @@ import numpy as np
 import pandas as pd
 import logging
 import matplotlib.pyplot as plt
+import matplotlib
 from pandas import DataFrame
+from datetime import datetime
 
 
-
+# matplotlib.use('TkAgg')
 logger = logging.getLogger("load_etf")
 
 
@@ -62,9 +64,30 @@ def get_asset_info(asset_code: str):
 def get_close_price_list_with_date(asset_data: DataFrame):
     return asset_data['Close']
 
+def timestamp_to_date(given_date: datetime):
+    return datetime.strftime(given_date, '%d-%m-%Y')
 
-def draw_line_graph(asset_data: DataFrame):
-    ...
+
+def draw_line_graph(asset_data: DataFrame, asset_name: str):
+    current_frame = asset_data
+    
+    try:
+        current_frame['formatted_date'] = current_frame.index.date
+    except Exception as e:
+        logger.error(f"Supplied index for asset data frame {asset_data.iloc[0].name} was invalid for conversion to formatted Date")
+        logger.error(e)
+
+
+    logger.info(current_frame['formatted_date'])
+    logger.info(current_frame['Close'])
+
+    plt.figure()
+    plt.title(asset_name)
+    plt.xlabel("formatted_date")
+    plt.ylabel("Close")
+    plt.plot(current_frame['formatted_date'], current_frame['Close'])
+    
+
 
 
 
@@ -88,6 +111,8 @@ if __name__ == "__main__":
 
         logger.info(f"Asset close prices: {get_close_price_list_with_date(max_history_data)}")
         logger.info(f"Total number of prices: {len(max_history_data['Close'])}")
+        draw_line_graph(max_history_data, asset_long_name)
         logger.info("--------------------------------------")
 
+    plt.show()
         
