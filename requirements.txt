@@ -1,0 +1,6 @@
+Django
+numpy==1.19.5
+pyfinance
+yfinance==0.2.54
+djangorestframework
+plotly
