@@ -8,6 +8,8 @@ import matplotlib.pyplot as plt
 import matplotlib
 from pandas import DataFrame
 from datetime import datetime
+import plotly.tools as tls
+import plotly.io as pio
 
 
 # matplotlib.use('TkAgg')
@@ -81,11 +83,36 @@ def draw_line_graph(asset_data: DataFrame, asset_name: str):
     logger.info(current_frame['formatted_date'])
     logger.info(current_frame['Close'])
 
-    plt.figure()
+    fig = plt.figure()
     plt.title(asset_name)
     plt.xlabel("formatted_date")
     plt.ylabel("Close")
     plt.plot(current_frame['formatted_date'], current_frame['Close'])
+    
+
+    return fig
+
+
+def render_graph_html(request, name):
+    asset_info = get_asset_info(name)
+    asset_long_name = asset_info['longName']
+    logger.info(asset_long_name)
+
+    logger.info("All time market data:")
+
+    max_history_data = select_asset_all_history(asset)
+    logger.info(max_history_data.iloc[0])
+
+    logger.info(f"Asset close prices: {get_close_price_list_with_date(max_history_data)}")
+    logger.info(f"Total number of prices: {len(max_history_data['Close'])}")
+    fig = draw_line_graph(max_history_data, asset_long_name)
+
+    # convert matplot to Plotly
+    plotly_fig = tls.mpl_to_plotly(fig)
+
+    html_str = pio.to_html(plotly_fig, full_html=False, include_plotlyjs='cdn')
+
+    print(html_str)
     
 
 
@@ -112,7 +139,6 @@ if __name__ == "__main__":
         logger.info(f"Asset close prices: {get_close_price_list_with_date(max_history_data)}")
         logger.info(f"Total number of prices: {len(max_history_data['Close'])}")
         draw_line_graph(max_history_data, asset_long_name)
+        render_graph_html(asset)
         logger.info("--------------------------------------")
-
-    plt.show()
         

@@ -55,7 +55,7 @@ ROOT_URLCONF = 'algo_trading_investigation.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': ['stock_api/templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
