@@ -93,8 +93,9 @@ def draw_line_graph(asset_data: DataFrame, asset_name: str):
     return fig
 
 
-def render_graph_html(request, name):
-    asset_info = get_asset_info(name)
+def render_graph_html(asset):
+    logger.info(f"Selected asset: {asset}")
+    asset_info = get_asset_info(asset)
     asset_long_name = asset_info['longName']
     logger.info(asset_long_name)
 
@@ -112,7 +113,7 @@ def render_graph_html(request, name):
 
     html_str = pio.to_html(plotly_fig, full_html=False, include_plotlyjs='cdn')
 
-    print(html_str)
+    return html_str
     
 
 
@@ -121,24 +122,24 @@ def render_graph_html(request, name):
 
 
 
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
+# if __name__ == "__main__":
+#     logging.basicConfig(level=logging.INFO)
 
-    for asset in etf_list:
-        asset_info = get_asset_info(asset)
+#     for asset in etf_list:
+#         asset_info = get_asset_info(asset)
 
-        asset_long_name = asset_info['longName']
+#         asset_long_name = asset_info['longName']
 
-        logger.info(asset_long_name)
+#         logger.info(asset_long_name)
 
-        logger.info("All time market data:")
+#         logger.info("All time market data:")
 
-        max_history_data = select_asset_all_history(asset)
-        logger.info(max_history_data.iloc[0])
+#         max_history_data = select_asset_all_history(asset)
+#         logger.info(max_history_data.iloc[0])
 
-        logger.info(f"Asset close prices: {get_close_price_list_with_date(max_history_data)}")
-        logger.info(f"Total number of prices: {len(max_history_data['Close'])}")
-        draw_line_graph(max_history_data, asset_long_name)
-        render_graph_html(asset)
-        logger.info("--------------------------------------")
+#         logger.info(f"Asset close prices: {get_close_price_list_with_date(max_history_data)}")
+#         logger.info(f"Total number of prices: {len(max_history_data['Close'])}")
+#         draw_line_graph(max_history_data, asset_long_name)
+#         render_graph_html(asset)
+#         logger.info("--------------------------------------")
         
