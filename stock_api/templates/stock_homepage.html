@@ -11,7 +11,11 @@
 
         <div class="btn-group" style="width:100%">
             {% for stock_key, stock_value in stock_list.items %}
-                <button>{{ stock_key }}</button>
+                <a href="{{ base_url }}{{ stock_key }}/">
+                    <button>
+                        {{ stock_key }}
+                    </button>
+                </a>
             {% endfor %}
         </div>
     </body>
