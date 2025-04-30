@@ -12,8 +12,8 @@ def get_stock(request):
 
 # create a function
 def simple_view(request):
-    data = {"content": "Gfg is the best"}
-    return render(request, "test.html", data)
+    context = {"content": "Gfg is the best"}
+    return render(request, "test.html", context)
 
 # render raw HTML for incoming asset name
 '''
@@ -27,6 +27,22 @@ etf_list = {
     'VMID.SW': 'Vanguard FTSE 250 UCITS ETF'
 }
 '''
+
+def landing_page_view(request):
+    context = {
+        "base_url": "http://127.0.0.1:8000/stock_choice/asset/",
+        "stock_list": {
+            '0P0000TKZK.L': 'Vanguard_LifeStrategy_60_Equity_Acc',
+            '0P0000TKZM.L': 'Vanguard_LifeStrategy_80_Equity_Acc',
+            '0P0000KSP6.L': 'Vanguard_FTSE_Dev_Wld_ex-UK_Eq_Idx_Acc',
+            '0P000185T3.L': 'Vanguard_Global_Equity_Accumulation',
+            'VERE.MI': 'Vanguard_FTSE_Developed_Europe_ex UK_UCITS_ETF_Accuimulation',
+            'VMID.SW': 'Vanguard FTSE 250 UCITS ETF'    
+        }
+    }
+    return render(request, "stock_homepage.html", context)
+
+
 def asset_graph_view(request, asset_name):
     html = render_graph_html(asset_name)
     return HttpResponse(html, content_type="text/html")
