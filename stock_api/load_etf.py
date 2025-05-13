@@ -10,12 +10,13 @@ from pandas import DataFrame
 from datetime import datetime
 import plotly.tools as tls
 import plotly.io as pio
+from curl_cffi import requests
 
 
 # matplotlib.use('TkAgg')
 logger = logging.getLogger("load_etf")
 
-
+session = requests.Session(impersonate="chrome")
 
 etf_list = {
     '0P0000TKZK.L': 'Vanguard_LifeStrategy_60_Equity_Acc',
@@ -29,7 +30,7 @@ etf_list = {
 
 
 def select_asset(asset_code: str):
-    asset_data = yf.Ticker(asset_code)
+    asset_data = yf.Ticker(asset_code, session=session)
 
     logger.info(asset_data.info)
 
@@ -42,7 +43,7 @@ def select_asset(asset_code: str):
 
 
 def select_asset_x_years(asset_code: str, years: int):
-    asset_data = yf.Ticker(asset_code)
+    asset_data = yf.Ticker(asset_code, session=session)
 
     historical_data = asset_data.history(period=f"{years}y")
 
@@ -53,13 +54,13 @@ def select_asset_x_years(asset_code: str, years: int):
 
 
 def select_asset_all_history(asset_code: str):
-    asset_data = yf.Ticker(asset_code)
+    asset_data = yf.Ticker(asset_code, session=session)
 
     return asset_data.history(period="max")
 
 
 def get_asset_info(asset_code: str):
-    asset_data = yf.Ticker(asset_code)
+    asset_data = yf.Ticker(asset_code, session=session)
     return asset_data.info
 
 
