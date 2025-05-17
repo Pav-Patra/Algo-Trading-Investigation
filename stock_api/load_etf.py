@@ -12,7 +12,7 @@ import plotly.tools as tls
 import plotly.io as pio
 from curl_cffi import requests
 
-
+matplotlib.use('agg')
 # matplotlib.use('TkAgg')
 logger = logging.getLogger("load_etf")
 
@@ -60,8 +60,10 @@ def select_asset_all_history(asset_code: str):
 
 
 def get_asset_info(asset_code: str):
+    print(asset_code)
     asset_data = yf.Ticker(asset_code, session=session)
-    return asset_data.info
+    print(asset_data)
+    return asset_data.get_info()
 
 
 def get_close_price_list_with_date(asset_data: DataFrame):
