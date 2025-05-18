@@ -12,6 +12,11 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 
+import os
+import logging
+
+LOG_LEVEL = os.environ.get("LOG_LEVEL", logging.INFO)
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -24,6 +29,26 @@ SECRET_KEY = 'django-insecure-&+y#4$62%ah8z_q290!@#g$lgcqo7-(885y5p&j5&-i^$#v#6&
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+
+LOGGING = {
+    "version": 1,
+    # This will leave the default Django logging behavior in place
+    "disable_existing_loggers": False,
+    # Custom handler config that gets log messages and outputs them to console
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "level": LOG_LEVEL,
+        },
+    },
+    "loggers": {
+        # Send everything to console
+        "": {
+            "handlers": ["console"],
+            "level": LOG_LEVEL,
+        },
+    },
+}
 
 ALLOWED_HOSTS = []
 

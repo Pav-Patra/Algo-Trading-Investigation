@@ -14,7 +14,7 @@ from curl_cffi import requests
 
 matplotlib.use('agg')
 # matplotlib.use('TkAgg')
-logger = logging.getLogger("load_etf")
+logger = logging.getLogger(__name__)
 
 session = requests.Session(impersonate="chrome")
 
