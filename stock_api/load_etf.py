@@ -52,7 +52,7 @@ def select_asset_x_years(asset_code: str, years: int):
     historical_data = asset_data.history(period=f"{years}y")
 
     logger.info(f"Historical data for past {years} years:")
-    logger.info(historical_data)
+    # logger.info(historical_data)
 
     return historical_data
 
@@ -87,8 +87,8 @@ def draw_line_graph(asset_data: DataFrame, asset_name: str):
         logger.error(e)
 
 
-    logger.info(current_frame['formatted_date'])
-    logger.info(current_frame['Close'])
+    # logger.info(current_frame['formatted_date'])
+    # logger.info(current_frame['Close'])
 
     fig = plt.figure()
     plt.title(asset_name)
@@ -109,9 +109,9 @@ def render_graph_html(asset):
     logger.info("All time market data:")
 
     max_history_data = select_asset_all_history(asset)
-    logger.info(max_history_data.iloc[0])
+    # logger.info(max_history_data.iloc[0])
 
-    logger.info(f"Asset close prices: {get_close_price_list_with_date(max_history_data)}")
+    # logger.info(f"Asset close prices: {get_close_price_list_with_date(max_history_data)}")
     logger.info(f"Total number of prices: {len(max_history_data['Close'])}")
     fig = draw_line_graph(max_history_data, asset_long_name)
 

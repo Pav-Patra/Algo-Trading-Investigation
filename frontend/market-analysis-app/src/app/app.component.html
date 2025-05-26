@@ -1,1 +1,22 @@
-<h1>Market Analysis Applicaiton</h1>
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+        <meta http-equiv="X-UA-Compatible" content="ie=edge"> 
+        <title>LandingPage</title>
+    </head>
+    <body>
+        <h1>Asset Analysis View</h1>
+
+        <div class="btn-group" style="width:100%">
+            <div *ngFor="let stock of stock_list">
+                <a href="{{ base_url }}asset/{{ stock.key }}/">
+                    <button>
+                        {{ stock.name }}
+                    </button>
+                </a>
+            </div>
+        </div>
+    </body>
+</html>

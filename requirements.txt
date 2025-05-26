@@ -5,3 +5,4 @@ yfinance
 djangorestframework
 plotly
 curl-cffi
+django-cors-headers

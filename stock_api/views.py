@@ -32,6 +32,24 @@ etf_list = {
 }
 '''
 
+@api_view(['GET'])
+def get_all_assets(request):
+    all_assets = [
+        {'key': '0P0000TKZK.L', 'name': 'Vanguard_LifeStrategy_60_Equity_Acc'},
+        {'key': '0P0000TKZM.L', 'name': 'Vanguard_LifeStrategy_80_Equity_Acc'},
+        {'key': '0P0000KSP6.L', 'name': 'Vanguard_FTSE_Dev_Wld_ex-UK_Eq_Idx_Acc'},
+        {'key': '0P000185T3.L', 'name': 'Vanguard_Global_Equity_Accumulation'},
+        {'key': 'VERE.MI', 'name': 'Vanguard_FTSE_Developed_Europe_ex UK_UCITS_ETF_Accuimulation'},
+        {'key': 'VMID.SW', 'name': 'Vanguard FTSE 250 UCITS ETF'},
+        {'key': 'PLTR', 'name': 'Palantir Technologies Inc.'},
+        {'key': 'NVDA', 'name': 'NVIDIA Corporation'},
+        {'key': 'MSFT', 'name': 'Microsoft Corporation'},
+        {'key': 'GOOG', 'name': 'Alphabet Inc'}
+    ]
+
+    return Response(all_assets)
+
+
 def landing_page_view(request):
     context = {
         "base_url": "http://127.0.0.1:8000/stock_choice/asset/",
