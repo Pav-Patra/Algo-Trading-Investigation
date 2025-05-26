@@ -24,7 +24,11 @@ etf_list = {
     '0P0000KSP6.L': 'Vanguard_FTSE_Dev_Wld_ex-UK_Eq_Idx_Acc',
     '0P000185T3.L': 'Vanguard_Global_Equity_Accumulation',
     'VERE.MI': 'Vanguard_FTSE_Developed_Europe_ex UK_UCITS_ETF_Accuimulation',
-    'VMID.SW': 'Vanguard FTSE 250 UCITS ETF'
+    'VMID.SW': 'Vanguard FTSE 250 UCITS ETF',
+    'PLTR': 'Palantir Technologies Inc.',
+    'NVDA': 'NVIDIA Corporation',
+    'MSFT': 'Microsoft Corporation',
+    'GOOG': 'Alphabet Inc.'
 }
 '''
 
@@ -37,7 +41,11 @@ def landing_page_view(request):
             '0P0000KSP6.L': 'Vanguard_FTSE_Dev_Wld_ex-UK_Eq_Idx_Acc',
             '0P000185T3.L': 'Vanguard_Global_Equity_Accumulation',
             'VERE.MI': 'Vanguard_FTSE_Developed_Europe_ex UK_UCITS_ETF_Accuimulation',
-            'VMID.SW': 'Vanguard FTSE 250 UCITS ETF'    
+            'VMID.SW': 'Vanguard FTSE 250 UCITS ETF',
+            'PLTR': 'Palantir Technologies Inc.',
+            'NVDA': 'NVIDIA Corporation',
+            'MSFT': 'Microsoft Corporation',
+            'GOOG': 'Alphabet Inc.'
         }
     }
     return render(request, "stock_homepage.html", context)
