@@ -1,5 +1,4 @@
 import { TestBed } from '@angular/core/testing';
-
 import { StockApiService } from './stock-api.service';
 
 describe('StockApiService', () => {

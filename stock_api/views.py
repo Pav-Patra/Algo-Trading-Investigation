@@ -49,7 +49,7 @@ def get_all_assets(request):
 
     return Response(all_assets)
 
-
+# django side landing page (use angular frontend one)
 def landing_page_view(request):
     context = {
         "base_url": "http://127.0.0.1:8000/stock_choice/asset/",
