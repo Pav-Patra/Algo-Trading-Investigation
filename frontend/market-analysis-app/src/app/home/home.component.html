@@ -1,0 +1,9 @@
+<div class="btn-group">
+    <div *ngFor="let stock of stock_list">
+        <a href="{{ base_url }}asset/{{ stock.key }}/">
+            <button>
+                {{ stock.name }}
+            </button>
+        </a>
+    </div>
+</div>
