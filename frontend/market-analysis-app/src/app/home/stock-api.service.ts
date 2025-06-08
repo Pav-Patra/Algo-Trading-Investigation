@@ -1,6 +1,6 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { StockChoice } from '../model/stockChoice.type';
 
 @Injectable({
   providedIn: 'root'
@@ -8,12 +8,12 @@ import { Observable } from 'rxjs';
 export class StockApiService {
 
   public baseUrl: string = "http://127.0.0.1:8000/stock_choice/";
-  httpHeaders = new HttpHeaders({'Content-Type': 'application/json'});
 
-  constructor(private http: HttpClient) { }
-
-  getAllAssets(): Observable<any> {
-    return this.http.get(this.baseUrl + 'assets', 
-      {headers: this.httpHeaders})
+  http = inject(HttpClient)
+  getAllAssets() {
+    const httpHeaders = new HttpHeaders({'Content-Type': 'application/json'});
+    
+    return this.http.get<Array<StockChoice>>(this.baseUrl+'assets', {headers: httpHeaders})
   }
+
 }

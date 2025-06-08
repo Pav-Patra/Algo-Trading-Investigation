@@ -1,6 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { StockApiService } from './stock-api.service';
 import { CommonModule } from '@angular/common';
+import { catchError } from 'rxjs';
+import { StockChoice } from '../model/stockChoice.type';
 
 @Component({
   selector: 'app-home',
@@ -9,25 +11,22 @@ import { CommonModule } from '@angular/common';
   templateUrl: './home.component.html',
   styleUrl: './home.component.css'
 })
-export class HomeComponent {
+export class HomeComponent implements OnInit {
 
-  public base_url: string;
+  stockApiService = inject(StockApiService);
+  stockList = signal<Array<StockChoice>>([]);
+  baseUrl = signal<String>("");
 
-  constructor(private stockApiService: StockApiService) {
-    this.base_url = this.stockApiService.baseUrl;
-
-    this.getAllAssets();
-  }
-
-  stock_list = [
-    {key: 'TS', name: 'Test'}
-  ];
-
-  getAllAssets = () => {
-    this.stockApiService.getAllAssets().subscribe({
-      next: (data) => this.stock_list = data ,
-      error: (error) => console.log(error),
-      complete: () => console.info('complete')
+  ngOnInit(): void {
+    this.baseUrl.set(this.stockApiService.baseUrl);
+    this.stockApiService.getAllAssets().pipe(
+      catchError((err) => {
+        console.log(err);
+        throw err;
+      })
+    )
+    .subscribe((assets) => {
+      this.stockList.set(assets);
     })
   }
 
