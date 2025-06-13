@@ -120,6 +120,8 @@ def render_graph_html(asset):
 
     html_str = pio.to_html(plotly_fig, full_html=False, include_plotlyjs='cdn')
 
+    logger.info(html_str)
+
     return html_str
     
 

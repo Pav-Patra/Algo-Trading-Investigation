@@ -3,10 +3,11 @@ import { StockApiService } from './stock-api.service';
 import { CommonModule } from '@angular/common';
 import { catchError } from 'rxjs';
 import { StockChoice } from '../model/stockChoice.type';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-home',
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   providers: [StockApiService],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css'
