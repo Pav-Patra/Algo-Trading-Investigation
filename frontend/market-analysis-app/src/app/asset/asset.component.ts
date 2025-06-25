@@ -1,5 +1,6 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, Input } from '@angular/core';
 import { AssetsService } from './assets.service';
+import { AssetDataService } from '../asset-data.service';
 
 @Component({
   selector: 'app-asset',
@@ -11,10 +12,17 @@ export class AssetComponent {
   graphHtml: string = '';
   loading: boolean = false;
   error: string = '';
+  @Input() assetName = '';
   assetsService = inject(AssetsService)
+  fetchedAsset: string = '';
+
+  constructor(private dataService: AssetDataService) {}
 
   ngOnInit(): void {
-    this.loadAssetGraph();
+    this.dataService.currentData.subscribe(data => {
+      this.fetchedAsset = data;
+    })
+    this.loadAssetGraph(this.fetchedAsset);
   }
 
   loadAssetGraph(assetName: string) {
