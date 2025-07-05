@@ -1,0 +1,8 @@
+.asset-container {
+    padding: 20px;
+}
+
+.plotly-chart {
+    width: 100%;
+    height: 400px;
+}

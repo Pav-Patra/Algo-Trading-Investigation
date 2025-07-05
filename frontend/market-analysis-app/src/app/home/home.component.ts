@@ -2,7 +2,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { StockApiService } from './stock-api.service';
 import { CommonModule } from '@angular/common';
 import { catchError } from 'rxjs';
-import { StockChoice } from '../model/stockChoice.type';
+import { AssetChoice } from '../model/AssetChoice.type';
 import { RouterLink } from '@angular/router';
 import { AssetDataService } from '../asset-data.service';
 
@@ -17,7 +17,7 @@ import { AssetDataService } from '../asset-data.service';
 export class HomeComponent implements OnInit {
 
   stockApiService = inject(StockApiService);
-  stockList = signal<Array<StockChoice>>([]);
+  stockList = signal<Array<AssetChoice>>([]);
   baseUrl = signal<String>("");
 
   constructor(private dataService: AssetDataService) {}

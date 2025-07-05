@@ -49,7 +49,7 @@ def get_all_assets(request):
 
     return Response(all_assets)
 
-# django side landing page (use angular frontend one)
+# django site landing page (use angular frontend one)
 def landing_page_view(request):
     context = {
         "base_url": "http://127.0.0.1:8000/stock_choice/asset/",
@@ -68,7 +68,13 @@ def landing_page_view(request):
     }
     return render(request, "stock_homepage.html", context)
 
-
+@api_view(['GET'])
 def asset_graph_view(request, asset_name):
     html = render_graph_html(asset_name)
-    return HttpResponse(html, content_type="text/html")
+    test_string = f"<h1>Loaded {asset_name}!</h1>"
+    jsonAssetResponse = {
+        "name": asset_name,
+        "graphHtml": test_string
+    }
+
+    return Response(jsonAssetResponse)

@@ -1,4 +1,4 @@
-export type StockChoice = {
+export type AssetChoice = {
     key: string;
     name: string
 }
