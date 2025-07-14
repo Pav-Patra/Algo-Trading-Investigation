@@ -1,5 +1,11 @@
 <div [innerHTML]="graphHtml()"></div>
 
 <div class="chart-container">
-    <canvas id="MyChart" >{{ chart }}</canvas>
+    <h2>Asset Price Chart</h2>
+      <canvas #chartCanvas></canvas>
+      <div class="chart-info">
+        <p>Data Points: {{ closingPrices.length }}</p>
+        <p>Date Range: {{ getDateRange() }}</p>
+      </div>
+
 </div>

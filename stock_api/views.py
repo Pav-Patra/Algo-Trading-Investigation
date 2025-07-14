@@ -2,7 +2,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from django.shortcuts import render
 from django.http import HttpResponse
-from .load_etf import render_graph_html
+from .load_etf import render_graph_html, get_asset_close_data
 
 
 @api_view(['GET'])
@@ -71,10 +71,13 @@ def landing_page_view(request):
 @api_view(['GET'])
 def asset_graph_view(request, asset_name):
     html = render_graph_html(asset_name)
+    asset_data = get_asset_close_data(asset_name)
     test_string = f"<h1>Loaded {asset_name}!</h1>"
     jsonAssetResponse = {
         "name": asset_name,
-        "graphHtml": test_string
+        "graphHtml": test_string,
+        "assetDates": asset_data[0],
+        "assetClosingPrices": asset_data[1]
     }
 
     return Response(jsonAssetResponse)

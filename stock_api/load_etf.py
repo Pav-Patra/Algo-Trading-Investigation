@@ -100,6 +100,32 @@ def draw_line_graph(asset_data: DataFrame, asset_name: str):
     return fig
 
 
+def get_asset_close_data(asset):
+    logger.info(f"Selected asset: {asset}")
+    asset_data = select_asset_all_history(asset)
+
+    logger.info(asset_data)
+
+    current_frame = asset_data
+
+    try:
+        current_frame['formatted_data'] = current_frame.index.date
+        
+    except Exception as e:
+        logger.error(f"Supplied index for asset data frame {asset_data.iloc[0].name} was invalid for conversion to formatted Date")
+        logger.error(e)
+
+    # logger.info(current_frame['formatted_date'])
+    # logger.info(current_frame['Close'])
+
+    logger.info(current_frame.index.date)
+    logger.info(len(current_frame.index.date))
+    logger.info(len(current_frame['Close']))
+
+    return [current_frame.index.date, current_frame['Close']]
+
+
+
 def render_graph_html(asset):
     logger.info(f"Selected asset: {asset}")
     asset_info = get_asset_info(asset)
@@ -119,8 +145,6 @@ def render_graph_html(asset):
     plotly_fig = tls.mpl_to_plotly(fig)
 
     html_str = pio.to_html(plotly_fig, full_html=False, include_plotlyjs='cdn')
-
-    logger.info(html_str)
 
     return html_str
     
