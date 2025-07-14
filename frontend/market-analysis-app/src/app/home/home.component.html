@@ -1,0 +1,9 @@
+<div class="btn-group">
+    @for (stock of stockList(); track stock.key) {
+        <!-- <a href="{{ baseUrl() }}asset/{{ stock.key }}/"> -->
+        <button routerLink="/asset" (click)="sendData(stock.key)">
+            {{ stock.name }}
+        </button>
+        <!-- </a> -->
+    }
+</div>

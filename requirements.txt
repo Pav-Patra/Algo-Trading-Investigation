@@ -1,6 +1,8 @@
 Django
-numpy==1.19.5
+numpy
 pyfinance
-yfinance==0.2.54
+yfinance
 djangorestframework
 plotly
+curl-cffi
+django-cors-headers

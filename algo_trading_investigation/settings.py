@@ -12,6 +12,11 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 
+import os
+import logging
+
+LOG_LEVEL = os.environ.get("LOG_LEVEL", logging.INFO)
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -25,7 +30,31 @@ SECRET_KEY = 'django-insecure-&+y#4$62%ah8z_q290!@#g$lgcqo7-(885y5p&j5&-i^$#v#6&
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+LOGGING = {
+    "version": 1,
+    # This will leave the default Django logging behavior in place
+    "disable_existing_loggers": False,
+    # Custom handler config that gets log messages and outputs them to console
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "level": LOG_LEVEL,
+        },
+    },
+    "loggers": {
+        # Send everything to console
+        "": {
+            "handlers": ["console"],
+            "level": LOG_LEVEL,
+        },
+    },
+}
+
 ALLOWED_HOSTS = []
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:4200",
+]
 
 
 # Application definition
@@ -39,7 +68,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'stock_api',
-    'stock_test'
+    'stock_test',
+    'corsheaders'
 ]
 
 MIDDLEWARE = [
@@ -50,6 +80,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware'
 ]
 
 ROOT_URLCONF = 'algo_trading_investigation.urls'
@@ -118,7 +150,9 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [ os.path.join(BASE_DIR,'algo_trading_investigation/static'),  os.path.join(BASE_DIR,'stock_api/static')]
+STATIC_ROOT = os.path.join(BASE_DIR, 'assets')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field

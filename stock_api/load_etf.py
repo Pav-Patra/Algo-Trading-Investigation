@@ -10,12 +10,13 @@ from pandas import DataFrame
 from datetime import datetime
 import plotly.tools as tls
 import plotly.io as pio
+from curl_cffi import requests
 
-
+matplotlib.use('agg')
 # matplotlib.use('TkAgg')
-logger = logging.getLogger("load_etf")
+logger = logging.getLogger(__name__)
 
-
+session = requests.Session(impersonate="chrome")
 
 etf_list = {
     '0P0000TKZK.L': 'Vanguard_LifeStrategy_60_Equity_Acc',
@@ -23,13 +24,17 @@ etf_list = {
     '0P0000KSP6.L': 'Vanguard_FTSE_Dev_Wld_ex-UK_Eq_Idx_Acc',
     '0P000185T3.L': 'Vanguard_Global_Equity_Accumulation',
     'VERE.MI': 'Vanguard_FTSE_Developed_Europe_ex UK_UCITS_ETF_Accuimulation',
-    'VMID.SW': 'Vanguard FTSE 250 UCITS ETF'
+    'VMID.SW': 'Vanguard FTSE 250 UCITS ETF',
+    'PLTR': 'Palantir Technologies Inc.',
+    'NVDA': 'NVIDIA Corporation',
+    'MSFT': 'Microsoft Corporation',
+    'GOOG': 'Alphabet Inc.'
 }
 
 
 
 def select_asset(asset_code: str):
-    asset_data = yf.Ticker(asset_code)
+    asset_data = yf.Ticker(asset_code, session=session)
 
     logger.info(asset_data.info)
 
@@ -42,25 +47,27 @@ def select_asset(asset_code: str):
 
 
 def select_asset_x_years(asset_code: str, years: int):
-    asset_data = yf.Ticker(asset_code)
+    asset_data = yf.Ticker(asset_code, session=session)
 
     historical_data = asset_data.history(period=f"{years}y")
 
     logger.info(f"Historical data for past {years} years:")
-    logger.info(historical_data)
+    # logger.info(historical_data)
 
     return historical_data
 
 
 def select_asset_all_history(asset_code: str):
-    asset_data = yf.Ticker(asset_code)
+    asset_data = yf.Ticker(asset_code, session=session)
 
     return asset_data.history(period="max")
 
 
 def get_asset_info(asset_code: str):
-    asset_data = yf.Ticker(asset_code)
-    return asset_data.info
+    print(asset_code)
+    asset_data = yf.Ticker(asset_code, session=session)
+    print(asset_data)
+    return asset_data.get_info()
 
 
 def get_close_price_list_with_date(asset_data: DataFrame):
@@ -80,8 +87,8 @@ def draw_line_graph(asset_data: DataFrame, asset_name: str):
         logger.error(e)
 
 
-    logger.info(current_frame['formatted_date'])
-    logger.info(current_frame['Close'])
+    # logger.info(current_frame['formatted_date'])
+    # logger.info(current_frame['Close'])
 
     fig = plt.figure()
     plt.title(asset_name)
@@ -93,6 +100,32 @@ def draw_line_graph(asset_data: DataFrame, asset_name: str):
     return fig
 
 
+def get_asset_close_data(asset):
+    logger.info(f"Selected asset: {asset}")
+    asset_data = select_asset_all_history(asset)
+
+    logger.info(asset_data)
+
+    current_frame = asset_data
+
+    try:
+        current_frame['formatted_data'] = current_frame.index.date
+        
+    except Exception as e:
+        logger.error(f"Supplied index for asset data frame {asset_data.iloc[0].name} was invalid for conversion to formatted Date")
+        logger.error(e)
+
+    # logger.info(current_frame['formatted_date'])
+    # logger.info(current_frame['Close'])
+
+    logger.info(current_frame.index.date)
+    logger.info(len(current_frame.index.date))
+    logger.info(len(current_frame['Close']))
+
+    return [current_frame.index.date, current_frame['Close']]
+
+
+
 def render_graph_html(asset):
     logger.info(f"Selected asset: {asset}")
     asset_info = get_asset_info(asset)
@@ -102,9 +135,9 @@ def render_graph_html(asset):
     logger.info("All time market data:")
 
     max_history_data = select_asset_all_history(asset)
-    logger.info(max_history_data.iloc[0])
+    # logger.info(max_history_data.iloc[0])
 
-    logger.info(f"Asset close prices: {get_close_price_list_with_date(max_history_data)}")
+    # logger.info(f"Asset close prices: {get_close_price_list_with_date(max_history_data)}")
     logger.info(f"Total number of prices: {len(max_history_data['Close'])}")
     fig = draw_line_graph(max_history_data, asset_long_name)
 

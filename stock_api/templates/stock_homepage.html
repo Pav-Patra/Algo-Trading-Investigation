@@ -1,0 +1,24 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+        <meta http-equiv="X-UA-Compatible" content="ie=edge"> 
+        <title>LandingPage</title>
+        <link rel="stylesheet" href="{% static 'css/main_styles.css' %}">
+    </head>
+    <body>
+        <h1>Asset Analysis View</h1>
+
+        <div class="btn-group" style="width:100%">
+            {% for stock_key, stock_value in stock_list.items %}
+                <a href="{{ base_url }}{{ stock_key }}/">
+                    <button>
+                        {{ stock_value }}
+                    </button>
+                </a>
+            {% endfor %}
+        </div>
+    </body>
+</html>
