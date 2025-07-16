@@ -109,12 +109,4 @@ export class AssetComponent implements OnInit {
     this.chart = new Chart(ctx, config);
   }
 
-  // Helper method to get date range
-  getDateRange(): string {
-    if (this.assetDates.length === 0) return 'No data';
-    const start = this.assetDates[0];
-    const end = this.assetDates[this.assetDates.length - 1];
-    return `${start} to ${end}`;
-  }
-
 }
