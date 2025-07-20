@@ -72,6 +72,7 @@ export class AssetComponent implements OnInit {
           borderColor: 'rgb(75, 192, 192)',
           backgroundColor: 'rgba(75, 192, 192, 0.2)',
           tension: 0.1,
+          radius: 0,
           fill: true
         }]
       },
