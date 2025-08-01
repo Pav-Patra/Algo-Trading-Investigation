@@ -2,7 +2,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from django.shortcuts import render
 from django.http import HttpResponse
-from .load_etf import render_graph_html, get_asset_close_data
+from .asset_load import render_graph_html, get_asset_close_data
 
 
 @api_view(['GET'])

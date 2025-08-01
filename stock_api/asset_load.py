@@ -7,17 +7,30 @@ import logging
 import matplotlib.pyplot as plt
 import matplotlib
 from pandas import DataFrame
-from datetime import datetime
+from datetime import datetime, timedelta
 import plotly.tools as tls
 import plotly.io as pio
 from curl_cffi import requests
 
+
+"""
+asset_load.py - a series of functions that manipulates and normalises data using pandas. 
+Data is fetched from yfinance.
+
+by Pav Patra, a dictionary stores, for each asset, {asset_code : asset_full_name}
+
+select stocks/funds/etfs are used for now
+
+"""
+
+
+
 matplotlib.use('agg')
-# matplotlib.use('TkAgg')
 logger = logging.getLogger(__name__)
 
 session = requests.Session(impersonate="chrome")
 
+# select asset list
 etf_list = {
     '0P0000TKZK.L': 'Vanguard_LifeStrategy_60_Equity_Acc',
     '0P0000TKZM.L': 'Vanguard_LifeStrategy_80_Equity_Acc',
@@ -100,7 +113,19 @@ def draw_line_graph(asset_data: DataFrame, asset_name: str):
     return fig
 
 
-def get_asset_close_data(asset):
+def get_asset_close_data(asset: str) -> list:
+    """
+    Fetches, for a given asset name, the all-time history of close prices as a list
+    of close date and close price pairs.
+
+    Args:
+        asset (str): the asset name
+
+    Returns:
+        asset_date_close_list ([str, int]): list of close date close price pairs 
+
+    """
+
     logger.info(f"Selected asset: {asset}")
     asset_data = select_asset_all_history(asset)
 
@@ -123,6 +148,35 @@ def get_asset_close_data(asset):
     logger.info(len(current_frame['Close']))
 
     return [current_frame.index.date, current_frame['Close']]
+
+
+def get_asset_change_price(asset: str, minutes: int):
+    """
+    Returns the change in price for an asset from current time back to a time specified in minutes
+    """
+
+    # given a time in minutes, get the close price at date time calculated by subtracting time given from current time
+
+    ticker = yf.Ticker(asset, session=session)
+
+    calc_date_time = datetime.now() - timedelta(minutes=minutes)
+
+    date_time_thirty = datetime.now - timedelta(days=30)
+
+    if calc_date_time < date_time_thirty:
+        start_time = calc_date_time - timedelta(minutes=2)
+        end_time = calc_date_time - timedelta(minutes=2)
+
+        asset_price = ticker.history(start=start_time, end=end_time, interval="1m")
+    else:
+        start_time = calc_date_time - timedelta(days=1)
+        end_time = calc_date_time + timedelta(days=1)
+
+        asset_price = ticker.history(start=start_time, end=end_time, interval="1d")
+
+
+    
+    
 
 
 
@@ -155,8 +209,8 @@ def render_graph_html(asset):
 
 
 
-# if __name__ == "__main__":
-#     logging.basicConfig(level=logging.INFO)
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
 
 #     for asset in etf_list:
 #         asset_info = get_asset_info(asset)
@@ -175,4 +229,4 @@ def render_graph_html(asset):
 #         draw_line_graph(max_history_data, asset_long_name)
 #         render_graph_html(asset)
 #         logger.info("--------------------------------------")
-        
+    get_asset_change_price('NVDA', '2')
