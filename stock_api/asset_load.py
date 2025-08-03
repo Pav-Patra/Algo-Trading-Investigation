@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 session = requests.Session(impersonate="chrome")
 
 # select asset list
-etf_list = {
+ETF_LIST = {
     '0P0000TKZK.L': 'Vanguard_LifeStrategy_60_Equity_Acc',
     '0P0000TKZM.L': 'Vanguard_LifeStrategy_80_Equity_Acc',
     '0P0000KSP6.L': 'Vanguard_FTSE_Dev_Wld_ex-UK_Eq_Idx_Acc',
@@ -44,6 +44,29 @@ etf_list = {
     'GOOG': 'Alphabet Inc.'
 }
 
+
+EXCHANGE_HOURS = {
+    "NMS": {  # NASDAQ
+        "open": "13:30",  # UTC
+        "close": "20:00"
+    },
+    "NYQ": {  # NYSE
+        "open": "13:30",
+        "close": "20:00"
+    },
+    "LSE": {  # London Stock Exchange
+        "open": "08:00",
+        "close": "16:30"
+    },
+    "HKG": {  # Hong Kong
+        "open": "01:30",
+        "close": "08:00"
+    },
+    "TSE": {  # Tokyo
+        "open": "00:00",
+        "close": "06:00"
+    },
+}
 
 
 def select_asset(asset_code: str):
@@ -150,6 +173,39 @@ def get_asset_close_data(asset: str) -> list:
     return [current_frame.index.date, current_frame['Close']]
 
 
+def get_market_hours(ticker_str):
+    ticker = yf.Ticker(ticker_str)
+    exchange = ticker.info.get("exchange")
+    hours = EXCHANGE_HOURS.get(exchange)
+    if hours:
+        return {
+            "exchange": exchange,
+            "open_utc": hours["open"],
+            "close_utc": hours["close"]
+        }
+    else:
+        return {
+            "exchange": exchange or "Unknown",
+            "open_utc": "Unknown",
+            "close_utc": "Unknown"
+        }
+    
+def is_weekday(day: str):
+    day_idx = {
+        'Monday': 1,
+        'Tuesday': 2,
+        'Wednesday': 3,
+        'Thursday': 4,
+        'Friday': 5,
+        'Saturday': 6,
+        'Sunday': 7
+    }
+
+    index = day_idx[day]
+
+    return index <= 5
+
+
 def get_asset_change_price(asset: str, minutes: int):
     """
     Returns the change in price for an asset from current time back to a time specified in minutes
@@ -159,20 +215,54 @@ def get_asset_change_price(asset: str, minutes: int):
 
     ticker = yf.Ticker(asset, session=session)
 
-    calc_date_time = datetime.now() - timedelta(minutes=minutes)
+    calc_date_time = datetime.now() - timedelta(minutes=float(minutes))
 
-    date_time_thirty = datetime.now - timedelta(days=30)
+    date_time_thirty = datetime.now() - timedelta(days=float(30))
 
-    if calc_date_time < date_time_thirty:
-        start_time = calc_date_time - timedelta(minutes=2)
-        end_time = calc_date_time - timedelta(minutes=2)
+    logger.info(f"Calc date time: {calc_date_time}")
+    logger.info(f"Thrity date time: {date_time_thirty}")
+
+    asset_hours = get_market_hours(asset)
+
+    logger.info(f"{asset_hours['exchange']} - {asset_hours['open_utc']} - {asset_hours['close_utc']}")
+
+    if calc_date_time > date_time_thirty:
+        # for minute spans, if weekday, get close price of previous day if < opend time, else get close price on same day if > close time
+        # if weekend, get close price on friday
+
+        logger.info("Less than thrirty days")
+        start_time = calc_date_time - timedelta(minutes=float(2))
+        end_time = calc_date_time + timedelta(minutes=float(2))
 
         asset_price = ticker.history(start=start_time, end=end_time, interval="1m")
-    else:
-        start_time = calc_date_time - timedelta(days=1)
-        end_time = calc_date_time + timedelta(days=1)
+        
+        if asset_price.empty:
+            # worst case stated calc time is Monday at 8:59am
+            # solution go back by 2 and half days days with 1m intervals
+            logger.info("No available price for given time frame")
 
-        asset_price = ticker.history(start=start_time, end=end_time, interval="1d")
+    else:
+        # for day spans, if outside trading hours (saturday/sunday) get close on friday
+
+        logger.info("More than thrirty days")
+        start_time = calc_date_time - timedelta(days=float(1))
+        end_time = calc_date_time + timedelta(days=float(1))
+
+        calc_day = calc_date_time.strftime('%A')
+        logger.info(calc_day)
+
+        if is_weekday(calc_day):
+            logger.info(f"{calc_day} is a trading day")
+        else:
+            logger.info(f"{calc_day} is not a trading day")
+
+
+
+        asset_price = ticker.history(start=calc_date_time, end=calc_date_time, interval="1d")
+
+    logger.info(f"Calculated start time for {asset}: {start_time}")
+    logger.info(f"Calculated end time for {asset}: {end_time}")
+    logger.info(asset_price)
 
 
     
@@ -212,7 +302,7 @@ def render_graph_html(asset):
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
 
-#     for asset in etf_list:
+#     for asset in ETF_LIST:
 #         asset_info = get_asset_info(asset)
 
 #         asset_long_name = asset_info['longName']
@@ -229,4 +319,4 @@ if __name__ == "__main__":
 #         draw_line_graph(max_history_data, asset_long_name)
 #         render_graph_html(asset)
 #         logger.info("--------------------------------------")
-    get_asset_change_price('NVDA', '2')
+    get_asset_change_price('PLTR',103000)
