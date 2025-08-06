@@ -46,25 +46,25 @@ ETF_LIST = {
 
 
 EXCHANGE_HOURS = {
-    "NMS": {  # NASDAQ
-        "open": "13:30",  # UTC
-        "close": "20:00"
+    "NMS": {  # NASDAQ (New York, Eastern Time)
+        "open": "09:30",  # ET
+        "close": "16:00"
     },
-    "NYQ": {  # NYSE
-        "open": "13:30",
-        "close": "20:00"
+    "NYQ": {  # NYSE (New York, Eastern Time)
+        "open": "09:30",  # ET
+        "close": "16:00"
     },
-    "LSE": {  # London Stock Exchange
-        "open": "08:00",
+    "LSE": {  # London Stock Exchange (UK Time)
+        "open": "08:00",  # BST or GMT depending on DST
         "close": "16:30"
     },
-    "HKG": {  # Hong Kong
-        "open": "01:30",
-        "close": "08:00"
+    "HKG": {  # Hong Kong (Hong Kong Time)
+        "open": "09:30",  # HKT
+        "close": "16:00"
     },
-    "TSE": {  # Tokyo
-        "open": "00:00",
-        "close": "06:00"
+    "TSE": {  # Tokyo Stock Exchange (Japan Time)
+        "open": "09:00",  # JST
+        "close": "15:00"
     },
 }
 
@@ -213,6 +213,8 @@ def get_asset_change_price(asset: str, minutes: int):
 
     # given a time in minutes, get the close price at date time calculated by subtracting time given from current time
 
+    # logic only works if ticker.info["quoteType"] == Equite, mutual funds and ETFs do not have by minute close prices - look at open per day
+
     ticker = yf.Ticker(asset, session=session)
 
     calc_date_time = datetime.now() - timedelta(minutes=float(minutes))
@@ -224,17 +226,18 @@ def get_asset_change_price(asset: str, minutes: int):
 
     asset_hours = get_market_hours(asset)
 
-    logger.info(f"{asset_hours['exchange']} - {asset_hours['open_utc']} - {asset_hours['close_utc']}")
-
     if calc_date_time > date_time_thirty:
         # for minute spans, if weekday, get close price of previous day if < opend time, else get close price on same day if > close time
         # if weekend, get close price on friday
 
-        logger.info("Less than thrirty days")
-        start_time = calc_date_time - timedelta(minutes=float(2))
-        end_time = calc_date_time + timedelta(minutes=float(2))
+        asset_hours = get_market_hours(asset)
 
-        asset_price = ticker.history(start=start_time, end=end_time, interval="1m")
+        if is_weekday(calc_date_time.day) and calc_date_time.time >= asset_hours[ticker.info.get("exchange")]['open'] and calc_date_time.time <= asset_hours[ticker.info.get("exchange")]['close']:
+
+            logger.info("Less than thrirty days")
+            end_time = calc_date_time + timedelta(minutes=float(1))
+
+            asset_price = ticker.history(start=calc_date_time, end=end_time, interval="1m")
         
         if asset_price.empty:
             # worst case stated calc time is Monday at 8:59am
@@ -245,7 +248,6 @@ def get_asset_change_price(asset: str, minutes: int):
         # for day spans, if outside trading hours (saturday/sunday) get close on friday
 
         logger.info("More than thrirty days")
-        start_time = calc_date_time - timedelta(days=float(1))
         end_time = calc_date_time + timedelta(days=float(1))
 
         calc_day = calc_date_time.strftime('%A')
@@ -253,6 +255,8 @@ def get_asset_change_price(asset: str, minutes: int):
 
         if is_weekday(calc_day):
             logger.info(f"{calc_day} is a trading day")
+
+            asset_price = ticker.history(start=calc_date_time, end=end_time, interval="1d")
         else:
             logger.info(f"{calc_day} is not a trading day")
 
@@ -319,4 +323,10 @@ if __name__ == "__main__":
 #         draw_line_graph(max_history_data, asset_long_name)
 #         render_graph_html(asset)
 #         logger.info("--------------------------------------")
-    get_asset_change_price('PLTR',103000)
+    # get_asset_change_price('PLTR',82540)
+
+    ticker = yf.Ticker('PLTR', session=session)
+    ticker_history = ticker.history(start= datetime(2025, 7, 10, 0, 1), end=datetime(2025, 7, 10, 23, 58), interval="1m")
+    # logger.info(ticker_history.index.tz)
+    logger.info(ticker.info["quoteType"])
+    logger.info(ticker_history)
