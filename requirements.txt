@@ -6,3 +6,4 @@ djangorestframework
 plotly
 curl-cffi
 django-cors-headers
+backports.zoneinfo

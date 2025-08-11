@@ -7,7 +7,8 @@ import logging
 import matplotlib.pyplot as plt
 import matplotlib
 from pandas import DataFrame
-from datetime import datetime, timedelta
+from datetime import datetime, time, timedelta
+from backports.zoneinfo import ZoneInfo
 import plotly.tools as tls
 import plotly.io as pio
 from curl_cffi import requests
@@ -47,16 +48,16 @@ ETF_LIST = {
 
 EXCHANGE_HOURS = {
     "NMS": {  # NASDAQ (New York, Eastern Time)
-        "open": "09:30",  # ET
-        "close": "16:00"
+        "open": time(9, 30),  # ET
+        "close": time(16, 00)
     },
     "NYQ": {  # NYSE (New York, Eastern Time)
-        "open": "09:30",  # ET
-        "close": "16:00"
+        "open": time(9, 30),  # ET
+        "close": time(16, 00)
     },
     "LSE": {  # London Stock Exchange (UK Time)
-        "open": "08:00",  # BST or GMT depending on DST
-        "close": "16:30"
+        "open": time(8, 00),  # BST or GMT depending on DST
+        "close": time(16, 30)
     },
     "HKG": {  # Hong Kong (Hong Kong Time)
         "open": "09:30",  # HKT
@@ -180,30 +181,56 @@ def get_market_hours(ticker_str):
     if hours:
         return {
             "exchange": exchange,
-            "open_utc": hours["open"],
-            "close_utc": hours["close"]
+            "open": hours["open"],
+            "close": hours["close"]
         }
     else:
         return {
             "exchange": exchange or "Unknown",
-            "open_utc": "Unknown",
-            "close_utc": "Unknown"
+            "open": "Unknown",
+            "close": "Unknown"
         }
     
-def is_weekday(day: str):
-    day_idx = {
-        'Monday': 1,
-        'Tuesday': 2,
-        'Wednesday': 3,
-        'Thursday': 4,
-        'Friday': 5,
-        'Saturday': 6,
-        'Sunday': 7
-    }
+def is_weekday(day: int):
+    '''
+    Takes a day of the week where 0 references Monday and 6 references Sunday
 
-    index = day_idx[day]
+    Args:
+        day (int): day of the week
 
-    return index <= 5
+    Returns: 
+        days <= 5 (boolean): expression to determine whether day is a week day
+    '''
+    return day <= 5
+
+
+def get_calc_date_time(asset):
+    exchange = get_market_hours(asset)['exchange']
+
+    if exchange == 'NMS' or exchange == 'NYQ':
+        datetime_utc = datetime.now()
+        return datetime_utc.astimezone(ZoneInfo("America/New_York"))
+    elif exchange == 'HKG':
+        datetime_utc = datetime.now()
+        return datetime_utc.astimezone(ZoneInfo("Asia/Hong_Kong"))
+    elif exchange == 'TSE':
+        datetime_utc = datetime.now()
+        return datetime_utc.astimezone(ZoneInfo("Asia/Tokyo"))
+    else:
+        return datetime.now()
+
+
+
+def calc_last_close_price(asset_hours: dict, calc_date_time: datetime):
+
+    if calc_date_time.weekday() > 4 or (calc_date_time.weekday == 0 and calc_date_time.time() < asset_hours['open']):
+        days_since_friday = (calc_date_time.weekday - 4) % 7
+        last_close_date = (calc_date_time - timedelta(days=days_since_friday)).date()
+        return datetime.combine(last_close_date, asset_hours['close'])
+
+    elif calc_date_time.weekday == 4 and calc_date_time.time() > asset_hours['close']:
+        return datetime.combine(calc_date_time.date(), asset_hours['close'])
+
 
 
 def get_asset_change_price(asset: str, minutes: int):
@@ -217,32 +244,58 @@ def get_asset_change_price(asset: str, minutes: int):
 
     ticker = yf.Ticker(asset, session=session)
 
-    calc_date_time = datetime.now() - timedelta(minutes=float(minutes))
+    current_time = get_calc_date_time(asset)
 
-    date_time_thirty = datetime.now() - timedelta(days=float(30))
+    # calc_date_time = datetime.now() - timedelta(minutes=float(minutes))
+
+    # date_time_thirty = datetime.now() - timedelta(days=float(30))
+
+    calc_date_time = current_time - timedelta(minutes=float(minutes))
+
+    date_time_thirty = calc_date_time - timedelta(days=float(30))
+
+    end_time = 0
 
     logger.info(f"Calc date time: {calc_date_time}")
-    logger.info(f"Thrity date time: {date_time_thirty}")
+    logger.info(f"Thirty date time: {date_time_thirty}")
+    logger.info(f"Calc time type: {type(calc_date_time.time())}")
 
     asset_hours = get_market_hours(asset)
+
+    logger.info(f"open time type: {type(asset_hours['open'])}")
+
+    logger.info(f"asset_hours: {asset_hours}")
+
+    close_price_at_time = None
 
     if calc_date_time > date_time_thirty:
         # for minute spans, if weekday, get close price of previous day if < opend time, else get close price on same day if > close time
         # if weekend, get close price on friday
 
-        asset_hours = get_market_hours(asset)
-
-        if is_weekday(calc_date_time.day) and calc_date_time.time >= asset_hours[ticker.info.get("exchange")]['open'] and calc_date_time.time <= asset_hours[ticker.info.get("exchange")]['close']:
+        if is_weekday(calc_date_time.weekday()) and calc_date_time.time() >= asset_hours['open'] and calc_date_time.time() <= asset_hours['close']:
 
             logger.info("Less than thrirty days")
             end_time = calc_date_time + timedelta(minutes=float(1))
 
             asset_price = ticker.history(start=calc_date_time, end=end_time, interval="1m")
+
+            
+            close_price_at_time = asset_price['Close'][0]
         
-        if asset_price.empty:
+        else:
             # worst case stated calc time is Monday at 8:59am
             # solution go back by 2 and half days days with 1m intervals
-            logger.info("No available price for given time frame")
+            # if weekday is saturday or sunday or before monday open get close price from last friday
+            # if weekday and not monday but time is before open get price of close from previous day
+            # if weekday and time after close get price at close on same day
+
+
+            logger.info(f"No available price for given time frame {calc_date_time.weekday()} at {calc_date_time.time()}")
+
+            last_close_time = calc_last_close_price(asset_hours, calc_date_time)
+            logger.info(f"adjusted close time: {last_close_time}")
+
+            
 
     else:
         # for day spans, if outside trading hours (saturday/sunday) get close on friday
@@ -257,16 +310,16 @@ def get_asset_change_price(asset: str, minutes: int):
             logger.info(f"{calc_day} is a trading day")
 
             asset_price = ticker.history(start=calc_date_time, end=end_time, interval="1d")
+            close_price_at_time = asset_price['Close'][0]
         else:
-            logger.info(f"{calc_day} is not a trading day")
+            logger.info(f"{calc_day} is not a trading day at {calc_date_time.day}")
 
 
-
-        asset_price = ticker.history(start=calc_date_time, end=calc_date_time, interval="1d")
-
-    logger.info(f"Calculated start time for {asset}: {start_time}")
+    logger.info(f"Calculated start time for {asset}: {calc_date_time}")
     logger.info(f"Calculated end time for {asset}: {end_time}")
-    logger.info(asset_price)
+
+    if close_price_at_time is not None:
+        logger.info(f"Close price at time: {close_price_at_time}")
 
 
     
@@ -323,10 +376,11 @@ if __name__ == "__main__":
 #         draw_line_graph(max_history_data, asset_long_name)
 #         render_graph_html(asset)
 #         logger.info("--------------------------------------")
-    # get_asset_change_price('PLTR',82540)
+    get_asset_change_price('PLTR',623)
 
-    ticker = yf.Ticker('PLTR', session=session)
-    ticker_history = ticker.history(start= datetime(2025, 7, 10, 0, 1), end=datetime(2025, 7, 10, 23, 58), interval="1m")
+    # ticker = yf.Ticker('PLTR', session=session)
+
+    # ticker_history = ticker.history(start= datetime(2025, 7, 10, 0, 1), end=datetime(2025, 7, 10, 23, 58), interval="1m")
     # logger.info(ticker_history.index.tz)
-    logger.info(ticker.info["quoteType"])
-    logger.info(ticker_history)
+    # logger.info(ticker.info["quoteType"])
+    # logger.info(ticker_history)
