@@ -222,6 +222,7 @@ def get_calc_date_time(asset):
 
 
 def calc_last_close_price(asset_hours: dict, calc_date_time: datetime):
+    logger.info(f"day of the week: {calc_date_time.weekday()}")
 
     if calc_date_time.weekday() > 4 or (calc_date_time.weekday == 0 and calc_date_time.time() < asset_hours['open']):
         days_since_friday = (calc_date_time.weekday - 4) % 7
@@ -230,6 +231,14 @@ def calc_last_close_price(asset_hours: dict, calc_date_time: datetime):
 
     elif calc_date_time.weekday == 4 and calc_date_time.time() > asset_hours['close']:
         return datetime.combine(calc_date_time.date(), asset_hours['close'])
+    
+    elif calc_date_time.time() > asset_hours['close']:
+        return datetime.combine(calc_date_time.date(), asset_hours['close'])
+    else:
+        logger.info(f"Calculated time: {asset_hours['close']}")
+        last_close_date = (calc_date_time - timedelta(days=calc_date_time.weekday()-1)).date()
+        logger.info(f"Calculated date: {last_close_date}")
+        return datetime.combine(last_close_date, asset_hours['close'])
 
 
 
@@ -294,6 +303,10 @@ def get_asset_change_price(asset: str, minutes: int):
 
             last_close_time = calc_last_close_price(asset_hours, calc_date_time)
             logger.info(f"adjusted close time: {last_close_time}")
+            adjusted_start_time = last_close_time - timedelta(minutes=1)
+            asset_price = ticker.history(start=adjusted_start_time, end=last_close_time, interval="1m")
+
+            close_price_at_time = asset_price['Close'][-1]
 
             
 
