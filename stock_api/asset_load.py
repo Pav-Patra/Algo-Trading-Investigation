@@ -225,13 +225,10 @@ def calc_last_close_price(asset_hours: dict, calc_date_time: datetime):
     logger.info(f"day of the week: {calc_date_time.weekday()}")
 
     if calc_date_time.weekday() > 4 or (calc_date_time.weekday == 0 and calc_date_time.time() < asset_hours['open']):
-        days_since_friday = (calc_date_time.weekday - 4) % 7
+        days_since_friday = (calc_date_time.weekday() - 4) % 7
         last_close_date = (calc_date_time - timedelta(days=days_since_friday)).date()
         return datetime.combine(last_close_date, asset_hours['close'])
 
-    elif calc_date_time.weekday == 4 and calc_date_time.time() > asset_hours['close']:
-        return datetime.combine(calc_date_time.date(), asset_hours['close'])
-    
     elif calc_date_time.time() > asset_hours['close']:
         return datetime.combine(calc_date_time.date(), asset_hours['close'])
     else:
@@ -255,13 +252,9 @@ def get_asset_change_price(asset: str, minutes: int):
 
     current_time = get_calc_date_time(asset)
 
-    # calc_date_time = datetime.now() - timedelta(minutes=float(minutes))
-
-    # date_time_thirty = datetime.now() - timedelta(days=float(30))
-
     calc_date_time = current_time - timedelta(minutes=float(minutes))
 
-    date_time_thirty = calc_date_time - timedelta(days=float(30))
+    date_time_thirty = current_time - timedelta(days=float(30))
 
     end_time = 0
 
@@ -316,8 +309,8 @@ def get_asset_change_price(asset: str, minutes: int):
         logger.info("More than thrirty days")
         end_time = calc_date_time + timedelta(days=float(1))
 
-        calc_day = calc_date_time.strftime('%A')
-        logger.info(calc_day)
+        calc_day = calc_date_time.weekday()
+        logger.info(f"weekday: {calc_day}")
 
         if is_weekday(calc_day):
             logger.info(f"{calc_day} is a trading day")
@@ -333,6 +326,10 @@ def get_asset_change_price(asset: str, minutes: int):
 
     if close_price_at_time is not None:
         logger.info(f"Close price at time: {close_price_at_time}")
+
+    # use calculated_price_at_time to find the percentage difference between this time and
+    # the time of the last close price and return this
+    # also handle the issue with mutual funds and ETF which don't supply per minute data 
 
 
     
@@ -389,7 +386,7 @@ if __name__ == "__main__":
 #         draw_line_graph(max_history_data, asset_long_name)
 #         render_graph_html(asset)
 #         logger.info("--------------------------------------")
-    get_asset_change_price('PLTR',623)
+    get_asset_change_price('PLTR',76200)
 
     # ticker = yf.Ticker('PLTR', session=session)
 
