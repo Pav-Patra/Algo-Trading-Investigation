@@ -199,9 +199,9 @@ def is_weekday(day: int):
         day (int): day of the week
 
     Returns: 
-        days <= 5 (boolean): expression to determine whether day is a week day
+        days < 5 (boolean): expression to determine whether day is a week day
     '''
-    return day <= 5
+    return day < 5
 
 
 def get_calc_date_time(asset):
@@ -239,7 +239,7 @@ def calc_last_close_price(asset_hours: dict, calc_date_time: datetime):
 
 
 
-def get_asset_change_price(asset: str, minutes: int):
+def get_stock_close_price(asset: str, minutes: int):
     """
     Returns the change in price for an asset from current time back to a time specified in minutes
     """
@@ -273,7 +273,6 @@ def get_asset_change_price(asset: str, minutes: int):
     if calc_date_time > date_time_thirty:
         # for minute spans, if weekday, get close price of previous day if < opend time, else get close price on same day if > close time
         # if weekend, get close price on friday
-
         if is_weekday(calc_date_time.weekday()) and calc_date_time.time() >= asset_hours['open'] and calc_date_time.time() <= asset_hours['close']:
 
             logger.info("Less than thrirty days")
@@ -294,12 +293,12 @@ def get_asset_change_price(asset: str, minutes: int):
 
             logger.info(f"No available price for given time frame {calc_date_time.weekday()} at {calc_date_time.time()}")
 
-            last_close_time = calc_last_close_price(asset_hours, calc_date_time)
-            logger.info(f"adjusted close time: {last_close_time}")
-            adjusted_start_time = last_close_time - timedelta(minutes=1)
-            asset_price = ticker.history(start=adjusted_start_time, end=last_close_time, interval="1m")
+            end_time = calc_last_close_price(asset_hours, calc_date_time)
+            logger.info(f"adjusted close time: {calc_date_time}")
+            calc_date_time = end_time - timedelta(minutes=1)
+            asset_price = ticker.history(start=calc_date_time, end=end_time, interval="1m")
 
-            close_price_at_time = asset_price['Close'][-1]
+            close_price_at_time = asset_price['Close'][0]
 
             
 
@@ -319,6 +318,12 @@ def get_asset_change_price(asset: str, minutes: int):
             close_price_at_time = asset_price['Close'][0]
         else:
             logger.info(f"{calc_day} is not a trading day at {calc_date_time.day}")
+            calc_date_time = calc_last_close_price(asset_hours, calc_date_time)
+            logger.info(f"adjusted close time: {calc_date_time}")
+            end_time = calc_date_time + timedelta(days=float(1))
+
+            asset_price = ticker.history(start=calc_date_time, end=end_time, interval="1d")
+            close_price_at_time = asset_price['Close'][0]
 
 
     logger.info(f"Calculated start time for {asset}: {calc_date_time}")
@@ -326,10 +331,31 @@ def get_asset_change_price(asset: str, minutes: int):
 
     if close_price_at_time is not None:
         logger.info(f"Close price at time: {close_price_at_time}")
+        return close_price_at_time
 
     # use calculated_price_at_time to find the percentage difference between this time and
     # the time of the last close price and return this
     # also handle the issue with mutual funds and ETF which don't supply per minute data 
+
+
+def get_asset_change_price(asset: str, minutes: int):
+    """
+    Returns the percentager change in price of an asset between current time and x minutes ago
+    """
+
+    ticker = yf.Ticker(asset, session=session)
+
+    if ticker.info["quoteType"] == "EQUITY":
+        latest_close_price = get_stock_close_price(asset, 0)
+        previous_close_price = get_stock_close_price(asset, minutes)
+
+        percentage_change = ((latest_close_price - previous_close_price) / previous_close_price) * 100
+
+        logger.info(f"Percentage change close price: {percentage_change}")
+        return percentage_change
+    else:
+        raise Exception(f"Asset: {asset} does not support percentage change per minute calulation")
+
 
 
     
@@ -386,7 +412,10 @@ if __name__ == "__main__":
 #         draw_line_graph(max_history_data, asset_long_name)
 #         render_graph_html(asset)
 #         logger.info("--------------------------------------")
-    get_asset_change_price('PLTR',76200)
+    get_asset_change_price('PLTR',80200)
+    get_asset_change_price('PLTR',1840)
+
+    # get_percentage_change_stock('PLTR',842)
 
     # ticker = yf.Ticker('PLTR', session=session)
 
