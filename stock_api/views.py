@@ -2,7 +2,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from django.shortcuts import render
 from django.http import HttpResponse
-from .asset_load import render_graph_html, get_asset_close_data
+from .asset_load import render_graph_html, get_asset_close_data, get_asset_change_price
 
 
 @api_view(['GET'])
@@ -81,3 +81,12 @@ def asset_graph_view(request, asset_name):
     }
 
     return Response(jsonAssetResponse)
+
+@api_view(['GET'])
+def get_percentage_change(request, asset_name, minutes):
+    percentage_change = get_asset_change_price(asset_name, minutes)
+    json_response = {
+        "assetName": asset_name,
+        "percentagePriceChange": percentage_change
+    }
+    return Response(json_response)

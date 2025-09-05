@@ -260,11 +260,8 @@ def get_stock_close_price(asset: str, minutes: int):
 
     logger.info(f"Calc date time: {calc_date_time}")
     logger.info(f"Thirty date time: {date_time_thirty}")
-    logger.info(f"Calc time type: {type(calc_date_time.time())}")
 
     asset_hours = get_market_hours(asset)
-
-    logger.info(f"open time type: {type(asset_hours['open'])}")
 
     logger.info(f"asset_hours: {asset_hours}")
 
@@ -280,8 +277,12 @@ def get_stock_close_price(asset: str, minutes: int):
 
             asset_price = ticker.history(start=calc_date_time, end=end_time, interval="1m")
 
-            
-            close_price_at_time = asset_price['Close'][0]
+            try:
+                close_price_at_time = asset_price['Close'][0]
+            except IndexError:
+                logger.error("Could not find price for given time frame")
+                close_price_at_time = None
+
         
         else:
             # worst case stated calc time is Monday at 8:59am
@@ -349,7 +350,10 @@ def get_asset_change_price(asset: str, minutes: int):
         latest_close_price = get_stock_close_price(asset, 0)
         previous_close_price = get_stock_close_price(asset, minutes)
 
-        percentage_change = ((latest_close_price - previous_close_price) / previous_close_price) * 100
+        if previous_close_price and latest_close_price:
+            percentage_change = ((latest_close_price - previous_close_price) / previous_close_price) * 100
+        else:
+            raise Exception(f"Error attempting to fetch prices of asset {asset}")
 
         logger.info(f"Percentage change close price: {percentage_change}")
         return percentage_change
@@ -392,8 +396,8 @@ def render_graph_html(asset):
 
 
 
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
+# if __name__ == "__main__":
+#     logging.basicConfig(level=logging.INFO)
 
 #     for asset in ETF_LIST:
 #         asset_info = get_asset_info(asset)
@@ -412,8 +416,8 @@ if __name__ == "__main__":
 #         draw_line_graph(max_history_data, asset_long_name)
 #         render_graph_html(asset)
 #         logger.info("--------------------------------------")
-    get_asset_change_price('PLTR',80200)
-    get_asset_change_price('PLTR',1840)
+    # get_asset_change_price('PLTR',80200)
+    # get_asset_change_price('PLTR',8520)
 
     # get_percentage_change_stock('PLTR',842)
 
