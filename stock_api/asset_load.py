@@ -1,5 +1,6 @@
 from pyfinance import TSeries # pyfinance is a python library for quantative analysis on financial data
 import yfinance as yf
+from yfinance import Ticker
 import argparse
 import numpy as np
 import pandas as pd
@@ -236,6 +237,73 @@ def calc_last_close_price(asset_hours: dict, calc_date_time: datetime):
         last_close_date = (calc_date_time - timedelta(days=calc_date_time.weekday()-1)).date()
         logger.info(f"Calculated date: {last_close_date}")
         return datetime.combine(last_close_date, asset_hours['close'])
+    
+
+def asset_price_pre_month(ticker: Ticker, asset: str, calc_date_time: datetime) -> float|None:
+    # for minute spans, if weekday, get close price of previous day if < opend time, else get close price on same day if > close time
+    # if weekend, get close price on friday
+    asset_hours = get_market_hours(asset)
+
+    logger.info(f"asset_hours: {asset_hours}")
+
+    if is_weekday(calc_date_time.weekday()) and calc_date_time.time() >= asset_hours['open'] and calc_date_time.time() <= asset_hours['close']:
+
+        logger.info("Less than thrirty days")
+        end_time = calc_date_time + timedelta(minutes=float(1))
+
+        asset_price = ticker.history(start=calc_date_time, end=end_time, interval="1m")
+
+        try:
+            return asset_price['Close'][0]
+        except IndexError:
+            logger.error("Could not find price for given time frame")
+            return None
+
+    
+    else:
+        # worst case stated calc time is Monday at 8:59am
+        # solution go back by 2 and half days days with 1m intervals
+        # if weekday is saturday or sunday or before monday open get close price from last friday
+        # if weekday and not monday but time is before open get price of close from previous day
+        # if weekday and time after close get price at close on same day
+
+
+        logger.info(f"No available price for given time frame {calc_date_time.weekday()} at {calc_date_time.time()}")
+
+        end_time = calc_last_close_price(asset_hours, calc_date_time)
+        logger.info(f"adjusted close time: {calc_date_time}")
+        calc_date_time = end_time - timedelta(minutes=1)
+        asset_price = ticker.history(start=calc_date_time, end=end_time, interval="1m")
+
+        return asset_price['Close'][0]
+
+
+def asset_price_post_month(ticker: Ticker, asset: str, calc_date_time: datetime) -> float|None:
+    # for day spans, if outside trading hours (saturday/sunday) get close on friday
+
+    asset_hours = get_market_hours(asset)
+
+    logger.info(f"asset_hours: {asset_hours}")
+
+    logger.info("More than thrirty days")
+    end_time = calc_date_time + timedelta(days=float(1))
+
+    calc_day = calc_date_time.weekday()
+    logger.info(f"weekday: {calc_day}")
+
+    if is_weekday(calc_day):
+        logger.info(f"{calc_day} is a trading day")
+
+        asset_price = ticker.history(start=calc_date_time, end=end_time, interval="1d")
+        return asset_price['Close'][0]
+    else:
+        logger.info(f"{calc_day} is not a trading day at {calc_date_time.day}")
+        calc_date_time = calc_last_close_price(asset_hours, calc_date_time)
+        logger.info(f"adjusted close time: {calc_date_time}")
+        end_time = calc_date_time + timedelta(days=float(1))
+
+        asset_price = ticker.history(start=calc_date_time, end=end_time, interval="1d")
+        return asset_price['Close'][0]
 
 
 
@@ -261,70 +329,16 @@ def get_stock_close_price(asset: str, minutes: int):
     logger.info(f"Calc date time: {calc_date_time}")
     logger.info(f"Thirty date time: {date_time_thirty}")
 
-    asset_hours = get_market_hours(asset)
-
-    logger.info(f"asset_hours: {asset_hours}")
-
     close_price_at_time = None
 
+    # the yfinance library behaves differently with assets priced after 30 days and before 30 days
     if calc_date_time > date_time_thirty:
-        # for minute spans, if weekday, get close price of previous day if < opend time, else get close price on same day if > close time
-        # if weekend, get close price on friday
-        if is_weekday(calc_date_time.weekday()) and calc_date_time.time() >= asset_hours['open'] and calc_date_time.time() <= asset_hours['close']:
-
-            logger.info("Less than thrirty days")
-            end_time = calc_date_time + timedelta(minutes=float(1))
-
-            asset_price = ticker.history(start=calc_date_time, end=end_time, interval="1m")
-
-            try:
-                close_price_at_time = asset_price['Close'][0]
-            except IndexError:
-                logger.error("Could not find price for given time frame")
-                close_price_at_time = None
-
         
-        else:
-            # worst case stated calc time is Monday at 8:59am
-            # solution go back by 2 and half days days with 1m intervals
-            # if weekday is saturday or sunday or before monday open get close price from last friday
-            # if weekday and not monday but time is before open get price of close from previous day
-            # if weekday and time after close get price at close on same day
-
-
-            logger.info(f"No available price for given time frame {calc_date_time.weekday()} at {calc_date_time.time()}")
-
-            end_time = calc_last_close_price(asset_hours, calc_date_time)
-            logger.info(f"adjusted close time: {calc_date_time}")
-            calc_date_time = end_time - timedelta(minutes=1)
-            asset_price = ticker.history(start=calc_date_time, end=end_time, interval="1m")
-
-            close_price_at_time = asset_price['Close'][0]
-
+        close_price_at_time = asset_price_pre_month(ticker, asset, calc_date_time)
             
 
     else:
-        # for day spans, if outside trading hours (saturday/sunday) get close on friday
-
-        logger.info("More than thrirty days")
-        end_time = calc_date_time + timedelta(days=float(1))
-
-        calc_day = calc_date_time.weekday()
-        logger.info(f"weekday: {calc_day}")
-
-        if is_weekday(calc_day):
-            logger.info(f"{calc_day} is a trading day")
-
-            asset_price = ticker.history(start=calc_date_time, end=end_time, interval="1d")
-            close_price_at_time = asset_price['Close'][0]
-        else:
-            logger.info(f"{calc_day} is not a trading day at {calc_date_time.day}")
-            calc_date_time = calc_last_close_price(asset_hours, calc_date_time)
-            logger.info(f"adjusted close time: {calc_date_time}")
-            end_time = calc_date_time + timedelta(days=float(1))
-
-            asset_price = ticker.history(start=calc_date_time, end=end_time, interval="1d")
-            close_price_at_time = asset_price['Close'][0]
+        close_price_at_time = asset_price_post_month(ticker, asset, calc_date_time)
 
 
     logger.info(f"Calculated start time for {asset}: {calc_date_time}")
@@ -396,30 +410,28 @@ def render_graph_html(asset):
 
 
 
-# if __name__ == "__main__":
-#     logging.basicConfig(level=logging.INFO)
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
 
-#     for asset in ETF_LIST:
-#         asset_info = get_asset_info(asset)
+    # for asset in ETF_LIST:
+    #     asset_info = get_asset_info(asset)
 
-#         asset_long_name = asset_info['longName']
+    #     asset_long_name = asset_info['longName']
 
-#         logger.info(asset_long_name)
+    #     logger.info(asset_long_name)
 
-#         logger.info("All time market data:")
+    #     logger.info("All time market data:")
 
-#         max_history_data = select_asset_all_history(asset)
-#         logger.info(max_history_data.iloc[0])
+    #     max_history_data = select_asset_all_history(asset)
+    #     logger.info(max_history_data.iloc[0])
 
-#         logger.info(f"Asset close prices: {get_close_price_list_with_date(max_history_data)}")
-#         logger.info(f"Total number of prices: {len(max_history_data['Close'])}")
-#         draw_line_graph(max_history_data, asset_long_name)
-#         render_graph_html(asset)
-#         logger.info("--------------------------------------")
-    # get_asset_change_price('PLTR',80200)
-    # get_asset_change_price('PLTR',8520)
-
-    # get_percentage_change_stock('PLTR',842)
+    #     logger.info(f"Asset close prices: {get_close_price_list_with_date(max_history_data)}")
+    #     logger.info(f"Total number of prices: {len(max_history_data['Close'])}")
+    #     draw_line_graph(max_history_data, asset_long_name)
+    #     render_graph_html(asset)
+    #     logger.info("--------------------------------------")
+    get_asset_change_price('PLTR',80200)
+    get_asset_change_price('PLTR',8520)
 
     # ticker = yf.Ticker('PLTR', session=session)
 
