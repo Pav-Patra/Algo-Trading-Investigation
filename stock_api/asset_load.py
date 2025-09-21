@@ -1,6 +1,7 @@
 from pyfinance import TSeries # pyfinance is a python library for quantative analysis on financial data
 import yfinance as yf
 from yfinance import Ticker
+from typing import Optional
 import argparse
 import numpy as np
 import pandas as pd
@@ -100,7 +101,7 @@ def select_asset_all_history(asset_code: str):
 
     return asset_data.history(period="max")
 
-
+# CHECK YFINANCE COMPATIBILITY
 def get_asset_info(asset_code: str):
     print(asset_code)
     asset_data = yf.Ticker(asset_code, session=session)
@@ -239,7 +240,7 @@ def calc_last_close_price(asset_hours: dict, calc_date_time: datetime):
         return datetime.combine(last_close_date, asset_hours['close'])
     
 
-def asset_price_pre_month(ticker: Ticker, asset: str, calc_date_time: datetime) -> float|None:
+def asset_price_pre_month(ticker: Ticker, asset: str, calc_date_time: datetime) -> Optional[float]:
     # for minute spans, if weekday, get close price of previous day if < opend time, else get close price on same day if > close time
     # if weekend, get close price on friday
     asset_hours = get_market_hours(asset)
@@ -278,7 +279,7 @@ def asset_price_pre_month(ticker: Ticker, asset: str, calc_date_time: datetime) 
         return asset_price['Close'][0]
 
 
-def asset_price_post_month(ticker: Ticker, asset: str, calc_date_time: datetime) -> float|None:
+def asset_price_post_month(ticker: Ticker, asset: str, calc_date_time: datetime) -> Optional[float]:
     # for day spans, if outside trading hours (saturday/sunday) get close on friday
 
     asset_hours = get_market_hours(asset)
@@ -353,9 +354,9 @@ def get_stock_close_price(asset: str, minutes: int):
     # also handle the issue with mutual funds and ETF which don't supply per minute data 
 
 
-def get_asset_change_price(asset: str, minutes: int):
+def get_asset_change(asset: str, minutes: int):
     """
-    Returns the percentager change in price of an asset between current time and x minutes ago
+    Returns the percentage change in price of an asset between current time and x minutes ago
     """
 
     ticker = yf.Ticker(asset, session=session)
@@ -410,8 +411,10 @@ def render_graph_html(asset):
 
 
 
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
+# if __name__ == "__main__":
+#     asset_info = get_asset_info('PLTR')
+#     print(asset_info)
+#     logging.basicConfig(level=logging.INFO)
 
     # for asset in ETF_LIST:
     #     asset_info = get_asset_info(asset)
@@ -430,8 +433,8 @@ if __name__ == "__main__":
     #     draw_line_graph(max_history_data, asset_long_name)
     #     render_graph_html(asset)
     #     logger.info("--------------------------------------")
-    get_asset_change_price('PLTR',80200)
-    get_asset_change_price('PLTR',8520)
+    # get_asset_change_price('MSFT',80200)
+    # get_asset_change_price('MSFT',850)
 
     # ticker = yf.Ticker('PLTR', session=session)
 

@@ -1,9 +1,8 @@
 <div class="btn-group">
-    @for (stock of stockList(); track stock.key) {
-        <!-- <a href="{{ baseUrl() }}asset/{{ stock.key }}/"> -->
-        <button routerLink="/asset" (click)="sendData(stock.key)">
-            {{ stock.name }}
+    @for (asset of assetEntries; track asset.key) {
+        <button routerLink="/asset" (click)="sendData(asset.key)">
+            {{ asset.value.name }}
+            {{ asset.value.percentChange }}
         </button>
-        <!-- </a> -->
     }
 </div>
