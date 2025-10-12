@@ -1,5 +1,5 @@
 Django
-numpy
+numpy<=1.23.5
 pyfinance
 yfinance
 djangorestframework
