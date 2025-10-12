@@ -68,7 +68,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'stock_api',
-    'stock_test',
     'corsheaders'
 ]
 

@@ -1,8 +1,9 @@
 Django
-numpy
+numpy<=1.23.5
 pyfinance
 yfinance
 djangorestframework
 plotly
 curl-cffi
 django-cors-headers
+backports.zoneinfo

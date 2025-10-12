@@ -72,6 +72,7 @@ export class AssetComponent implements OnInit {
           borderColor: 'rgb(75, 192, 192)',
           backgroundColor: 'rgba(75, 192, 192, 0.2)',
           tension: 0.1,
+          radius: 0,
           fill: true
         }]
       },
@@ -107,14 +108,6 @@ export class AssetComponent implements OnInit {
       }
     };
     this.chart = new Chart(ctx, config);
-  }
-
-  // Helper method to get date range
-  getDateRange(): string {
-    if (this.assetDates.length === 0) return 'No data';
-    const start = this.assetDates[0];
-    const end = this.assetDates[this.assetDates.length - 1];
-    return `${start} to ${end}`;
   }
 
 }
