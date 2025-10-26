@@ -7,13 +7,21 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.algo.trading.investigation.algo_trading_java.config.Asset;
+import com.algo.trading.investigation.algo_trading_java.config.StaticAsset;
+import com.algo.trading.investigation.algo_trading_java.utils.AssetRepository;
 
 @RestController
 public class AssetController {
 
+    AssetRepository assetRepository;
+
+    public AssetController(AssetRepository assetRepository) {
+        this.assetRepository = assetRepository;
+    }
+
     @GetMapping(path="/assets")
-    public List<Asset> getAssets() {
-        return null;
+    public List<StaticAsset.Asset> getAssets() {
+        return assetRepository.getAssets().getAssets();
     }
 
     @GetMapping(path="/asset/{id}")
