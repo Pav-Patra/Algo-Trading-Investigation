@@ -21,7 +21,7 @@ public class AssetController {
 
     @GetMapping(path="/assets")
     public List<StaticAsset.Asset> getAssets() {
-        return assetRepository.getAssets().getAssets();
+        return assetRepository.getStaticAssets().getAssets();
     }
 
     @GetMapping(path="/asset/{id}")

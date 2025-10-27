@@ -21,7 +21,7 @@ public class StaticAsset {
     private List<Asset> assets;
 
     @Accessors(chain = true)
-    public class Asset {
+    public static class Asset {
         @JsonProperty("key")
         private String key;
 
